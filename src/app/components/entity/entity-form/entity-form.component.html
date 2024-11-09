@@ -3,8 +3,8 @@
   <h6 class="mt-3 p-2">Detalles</h6>
   <div class="col-md-6">
     <div class="d-flex align-items-center flex-row">
-      <label for="name" class="form-label m-0">Nombre</label><label class="text-danger">*</label>
-      <input type="text" id="name" class="form-control ms-4" formControlName="name"
+      <label for="name" class="form-label m-0">Nombre</label><label class="text-danger me-5">*</label>
+      <input type="text" id="name" class="form-control ms-1" formControlName="name"
              [ngClass]="{
         'is-invalid': entityForm.get('name')?.invalid && entityForm.get('name')?.touched
       }"/>
@@ -20,7 +20,7 @@
   <div class="col-md-6">
 
     <div class="d-flex align-items-center flex-row">
-      <label for="last-name" class="form-label m-0">Apellido</label><label class="text-danger">*</label>
+      <label for="last-name" class="form-label m-0">Apellido</label><label class="text-danger me-5">*</label>
       <input type="text" id="last-name" class="form-control ms-4" formControlName="lastName"
              [ngClass]="{
         'is-invalid': entityForm.get('lastName')?.invalid && entityForm.get('lastName')?.touched
@@ -37,7 +37,7 @@
   <div class="col-md-6 mt-3">
     <div class="d-flex align-items-center flex-row">
       <label for="doc-type" class="form-label m-0">Tipo de Documento<label class="text-danger">*</label></label>
-      <select id="doc-type" class="form-select ms-2" formControlName="docType">
+      <select id="doc-type" class="form-select ms-0" formControlName="docType">
         <option value="DNI">DNI</option>
         <option value="PASSPORT">Pasaporte</option>
         <option value="CUIT">CUIT</option>
@@ -65,7 +65,7 @@
   <div class="col-md-6 mt-3">
     <div class="d-flex align-items-center flex-row">
       <label for="birth-date" class="form-label m-0">Fecha de Nacimiento</label>
-      <input type="date" id="birth-date" class="form-control ms-2" formControlName="birthDate"/>
+      <input type="date" id="birth-date" class="form-control ms-0" formControlName="birthDate"/>
     </div>
     <div>
       <small class="text-danger ms-2"

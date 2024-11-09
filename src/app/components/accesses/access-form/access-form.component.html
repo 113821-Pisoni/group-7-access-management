@@ -64,11 +64,11 @@
   <!-- Nombre -->
   <div class="col-md-6 mt-3">
     <div class="d-flex align-items-center flex-row">
-      <label for="firstName" class="form-label m-0">Nombre</label>
+      <label for="firstName" class="form-label m-0 me-5">Nombre</label>
       <input
         type="text"
         id="firstName"
-        class="form-control ms-3"
+        class="form-control ms-4"
         formControlName="firstName"
       />
     </div>
@@ -88,7 +88,7 @@
   <!-- Apellido -->
   <div class="col-md-6 mt-3">
     <div class="d-flex align-items-center flex-row">
-      <label for="lastName" class="form-label m-0">Apellido</label>
+      <label for="lastName" class="form-label m-0 me-4">Apellido</label>
       <input
         type="text"
         id="lastName"
@@ -121,7 +121,7 @@
       <input
         type="text"
         id="plotId"
-        class="form-control ms-3"
+        class="form-control ms-0"
         formControlName="plotId"
       />
     </div>
@@ -161,12 +161,12 @@
   <!-- Tipo de Vehículo -->
   <div class="col-md-6 mt-3">
     <div class="d-flex align-items-center flex-row">
-      <label for="vehicleType" class="form-label m-0"
+      <label for="vehicleType" class="form-label m-0 me-2"
         >Tipo de Vehículo<label class="text-danger">*</label></label
       >
       <select
         id="vehicleType"
-        class="form-select"
+        class="form-select ms-4"
         formControlName="vehicleType"
       >
         <option value="CAR">Automóvil</option>
@@ -181,11 +181,11 @@
   <!-- Matrícula del Vehículo -->
   <div class="col-md-6 mt-3">
     <div class="d-flex align-items-center flex-row">
-      <label for="vehicleReg" class="form-label m-0">Patente</label>
+      <label for="vehicleReg" class="form-label m-0 me-3">Patente</label>
       <input
         type="text"
         id="vehicleReg"
-        class="form-control ms-3"
+        class="form-control ms-4"
         formControlName="vehicleReg"
         [ngClass]="{
           'is-invalid':
@@ -224,10 +224,10 @@
   <!-- Comentarios -->
   <div class="col-md-12 mt-3">
     <div class="d-flex align-items-center flex-row">
-      <label for="comments" class="form-label m-0">Comentarios</label>
+      <label for="comments" class="form-label m-0 me-3">Comentarios</label>
       <textarea
         id="comments"
-        class="form-control ms-3"
+        class="form-control ms-4"
         formControlName="comments"
       ></textarea>
     </div>
