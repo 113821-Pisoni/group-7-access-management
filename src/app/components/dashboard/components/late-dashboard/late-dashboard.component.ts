@@ -91,10 +91,7 @@ export class LateDashboardComponent implements OnInit {
       }
       
       // Convertir maxValueResponse.key a formato dd/MM/yyyy
-      const date = new Date(maxValueResponse.key);
-      const formattedDate = `${date.getDate().toString().padStart(2, '0')}/${(date.getMonth() + 1).toString().padStart(2, '0')}/${date.getFullYear()}`;
-      
-      this.kpi3.value = formattedDate;
+      this.kpi3.value = formatDate(maxValueResponse.key);
       
     })
 
@@ -112,7 +109,7 @@ export class LateDashboardComponent implements OnInit {
       },
       format: '#',
     },
-    colors: ['#FFE08A'],
+    colors: ['#e0f59d'],
     hAxis: {
       textStyle: {color: '#6c757d'},
       showTextEvery: 2
@@ -133,11 +130,27 @@ export class LateDashboardComponent implements OnInit {
 
 
 }
+function formatDate(key: string): string {
+  let formattedDate: string = '';
 
+  if (/^\d{4}$/.test(key)) { 
+    formattedDate = key; 
+  } else if (/^\d{4}-\d{2}$/.test(key)) {
+    const [year, month] = key.split('-');
+    formattedDate = `${month}/${year}`; 
+  } else if (/^\d{4}-\d{2}-\d{2}$/.test(key)) { 
+    const [year, month, day] = key.split('-');
+    formattedDate = `${day}/${month}/${year}`; 
+  } else {
+    throw new Error("Formato de fecha no válido");
+  }
+
+  return formattedDate;
+}
 
 function mapColumnData(array:dashResponse[]) : any{
   return array.map(data => [
-    data.key,
+    formatDate(data.key),
     data.value || 0
   ]);
 }

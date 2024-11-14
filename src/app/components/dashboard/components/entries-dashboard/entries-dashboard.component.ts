@@ -31,9 +31,9 @@ export class EntriesDashboardComponent implements OnInit {
   }
 
   constructor(private dashBoardService: DashboardService) {
-    this.kpi1 = {title: " en el periodo", desc: "", value: "0", icon: "", color: ""}
-    this.kpi2 = {title: "Promedio diario", desc: "", value: "0", icon: "bi bi-calculator", color: "bg-warning"}
-    this.kpi3 = {title: "Periodo más concurrido", desc: "", value: "0", icon: "bi bi-calendar-event", color: "bg-info"}
+    this.kpi1 = { title: " en el periodo", desc: "", value: "0", icon: "", color: "" }
+    this.kpi2 = { title: "Promedio diario", desc: "", value: "0", icon: "bi bi-calculator", color: "bg-warning" }
+    this.kpi3 = { title: "Periodo más concurrido", desc: "", value: "0", icon: "bi bi-calendar-event", color: "bg-info" }
 
     this.graph1 = {title: "Ingresos/egresos", subtitle: "Totales por periodo seleccionado", data: [], options: null}
   }
@@ -54,7 +54,7 @@ export class EntriesDashboardComponent implements OnInit {
       this.graph1.data = mapColumnData(data)
       this.graph1.options = {
         ...this.columnChartOptions,
-        colors: [this.filters.action == 'ENTRY' ? '#8DDFDF' : '#FFA8B4']
+        colors: [this.filters.action == 'ENTRY' ? '#a2d9a5' : '#ff919e']
       }
       let totalValue1 = 0;
       data.forEach(item => {
@@ -64,17 +64,16 @@ export class EntriesDashboardComponent implements OnInit {
       this.kpi1.value = totalValue1.toString();
 
       let maxValueResponse = data[0];
-for (let i = 1; i < data.length; i++) {
-  if (parseFloat(data[i].value) > parseFloat(maxValueResponse.value)) {
-    maxValueResponse = data[i];
-  }
-}
+      for (let i = 1; i < data.length; i++) {
+        if (parseFloat(data[i].value) > parseFloat(maxValueResponse.value)) {
+          maxValueResponse = data[i];
+        }
+      }
 
-// Convertir maxValueResponse.key a formato dd/MM/yyyy
-const date = new Date(maxValueResponse.key);
-const formattedDate = `${date.getDate().toString().padStart(2, '0')}/${(date.getMonth() + 1).toString().padStart(2, '0')}/${date.getFullYear()}`;
+      // Convertir maxValueResponse.key a formato dd/MM/yyyy
 
-this.kpi3.value = formattedDate;
+
+      this.kpi3.value = formatDate(maxValueResponse.key);
 
 
 
@@ -84,8 +83,8 @@ this.kpi3.value = formattedDate;
 
   columnChartOptions = {
     backgroundColor: 'transparent',
-    legend: {position: 'none'},
-    chartArea: {width: '100%', height: '90%'},
+    legend: { position: 'none' },
+    chartArea: { width: '100%', height: '90%' },
     vAxis: {
       textStyle: {
         color: '#6c757d',
@@ -95,7 +94,7 @@ this.kpi3.value = formattedDate;
       format: '#',
     },
     hAxis: {
-      textStyle: {color: '#6c757d'},
+      textStyle: { color: '#6c757d' },
       showTextEvery: 2
     },
     animation: {
@@ -105,7 +104,7 @@ this.kpi3.value = formattedDate;
     },
     height: 400,
     width: 650,
-    bar: {groupWidth: '70%'}
+    bar: { groupWidth: '70%' }
   };
 
   back() {
@@ -115,9 +114,27 @@ this.kpi3.value = formattedDate;
 
 }
 
+function formatDate(key: string): string {
+  let formattedDate: string = '';
+
+  if (/^\d{4}$/.test(key)) {
+    formattedDate = key;
+  } else if (/^\d{4}-\d{2}$/.test(key)) {
+    const [year, month] = key.split('-');
+    formattedDate = `${month}/${year}`;
+  } else if (/^\d{4}-\d{2}-\d{2}$/.test(key)) {
+    const [year, month, day] = key.split('-');
+    formattedDate = `${day}/${month}/${year}`;
+  } else {
+    throw new Error("Formato de fecha no válido");
+  }
+
+  return formattedDate;
+}
+
 function mapColumnData(array: dashResponse[]): any {
   return array.map(data => [
-    data.key,
+    formatDate(data.key),
     data.value || 0
   ]);
 
