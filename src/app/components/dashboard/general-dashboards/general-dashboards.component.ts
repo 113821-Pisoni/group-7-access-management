@@ -1,4 +1,4 @@
-import { AfterViewInit, Component, inject, OnInit, TemplateRef, ViewChild } from '@angular/core';
+import { AfterViewInit, Component, inject, OnInit, TemplateRef, ViewChild, ChangeDetectorRef } from '@angular/core';
 import { AccessHourlyDashboardComponent } from '../../accesses/access-hourly-dashboard/access-hourly-dashboard.component';
 import { AccessWeeklyDashboardComponent } from '../../accesses/access-weekly-dashboard/access-weekly-dashboard.component';
 import { AccessPieDashboardComponent } from '../../accesses/access-pie-dashboard/access-pie-dashboard.component';
@@ -41,17 +41,20 @@ import { NgClass } from "@angular/common";
   templateUrl: './general-dashboards.component.html',
   styleUrl: './general-dashboards.component.css'
 })
-export class GeneralDashboardsComponent implements OnInit, AfterViewInit {
-  // Objeto para almacenar los filtros activos del dashboard
-  filters: DashBoardFilters = {} as DashBoardFilters;
+export class GeneralDashboardsComponent implements OnInit {
+  // Inicialización inmediata de filtros con valores por defecto
+  filters: DashBoardFilters = {
+    group: "DAY",
+    type: "",
+    action: "ENTRY",
+    dateFrom: "",
+    dateTo: "",
+    dataType: "ALL"
+  };
 
-  // Controla qué vista del dashboard se muestra actualmente
   status: DashboardStatus = DashboardStatus.All;
-
-  // Servicio para gestionar ventanas modales
   modalService = inject(NgbModal);
 
-  // Referencias a los componentes del dashboard para actualización de datos
   @ViewChild(MainDashboardComponent) main!: MainDashboardComponent;
   @ViewChild(EntriesDashboardComponent) entries!: EntriesDashboardComponent;
   @ViewChild(LateDashboardComponent) late!: LateDashboardComponent;
@@ -60,52 +63,68 @@ export class GeneralDashboardsComponent implements OnInit, AfterViewInit {
   @ViewChild(BarchartComponent) barchartComponent!: BarchartComponent;
   @ViewChild('infoModal') infoModal!: TemplateRef<any>;
 
-  constructor(private accessService: AccessService) {}
-
-  // Configura las fechas iniciales para el filtro de período
-  initializeDefaultDates() {
-    this.filters.group = "DAY";
-    this.filters.type = "";
-    this.filters.action = "ENTRY";
-    
-    const now = new Date();
-    now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
-    this.filters.dateTo = now.toISOString().slice(0, 16);
-
-    now.setDate(now.getDate() - 14);
-    now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
-    this.filters.dateFrom = now.toISOString().slice(0, 16);
+  constructor(
+    private accessService: AccessService,
+    private cdr: ChangeDetectorRef
+  ) {
+    this.initializeDefaultDates();
   }
 
-  // Abre el modal con información sobre el uso del dashboard
+  initializeDefaultDates() {
+    const now = new Date();
+    now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
+    
+    const twoWeeksAgo = new Date(now);
+    twoWeeksAgo.setDate(twoWeeksAgo.getDate() - 14);
+    
+    this.filters = {
+      ...this.filters,
+      dateTo: now.toISOString().slice(0, 16),
+      dateFrom: twoWeeksAgo.toISOString().slice(0, 16)
+    };
+  }
+
   onInfoButtonClick() {
     this.modalService.open(this.infoModal, { size: 'lg' });
   }
 
-  // Restaura los filtros a sus valores predeterminados
   resetFilters() {
     this.initializeDefaultDates();
-    this.filters.type = "";
-    this.filters.group = "DAY"
-    this.filters.action = "ENTRY"
-    this.filterData()
+    this.filters = {
+      ...this.filters,
+      type: "",
+      group: "DAY",
+      action: "ENTRY"
+    };
+    
+    // Usar setTimeout para evitar ExpressionChangedAfterItHasBeenCheckedError
+    setTimeout(() => {
+      this.filterData();
+      this.cdr.detectChanges();
+    });
   }
 
-  // Actualiza los datos en todos los componentes del dashboard
   filterData() {
-    this.main?.getData();
-    this.entries?.getData();
-    this.types?.getData();
-    this.inconsistencies?.getData();
-    this.late?.getData();
+    // Validar que los filtros tengan valores antes de actualizar
+    if (!this.filters.dateFrom || !this.filters.dateTo) {
+      this.initializeDefaultDates();
+    }
+
+    // Usar setTimeout para evitar ExpressionChangedAfterItHasBeenCheckedError
+    setTimeout(() => {
+      if (this.main) this.main.getData();
+      if (this.entries) this.entries.getData();
+      if (this.types) this.types.getData();
+      if (this.inconsistencies) this.inconsistencies.getData();
+      if (this.late) this.late.getData();
+      this.cdr.detectChanges();
+    });
   }
 
-  // Se ejecuta al inicializar el componente
   ngOnInit(): void {
-    // La inicialización principal se realiza en ngAfterViewInit
+    this.filterData();
   }
 
-  // Gestiona los cambios entre diferentes vistas del dashboard
   changeMode(event: any) {
     const statusKey = Object.keys(DashboardStatus).find(key => 
       DashboardStatus[key as keyof typeof DashboardStatus] === event
@@ -113,23 +132,17 @@ export class GeneralDashboardsComponent implements OnInit, AfterViewInit {
 
     if (statusKey) {
       this.status = DashboardStatus[statusKey as keyof typeof DashboardStatus];
+      setTimeout(() => {
+        if (this.types) this.types.getData();
+        this.cdr.detectChanges();
+      });
     } else {
       console.error('Valor no válido para el enum');
     }
-
-    this.types?.getData();
   }
 
-  // Expone el enum DashboardStatus para uso en el template
   protected readonly DashboardStatus = DashboardStatus;
 
-  // Inicializa el componente después de que la vista está lista
-  ngAfterViewInit(): void {
-    this.initializeDefaultDates();
-    this.filterData()
-  }
-
-  // Obtiene la fecha y hora actual en formato ISO para los inputs datetime-local
   getCurrentDateTime(): string {
     const now = new Date();
     now.setMinutes(now.getMinutes() - now.getTimezoneOffset());

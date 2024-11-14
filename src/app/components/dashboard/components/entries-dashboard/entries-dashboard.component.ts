@@ -1,8 +1,8 @@
-import {AfterRenderRef, AfterViewInit, Component, EventEmitter, Input, Output} from '@angular/core';
-import {DashBoardFilters, graphModel, kpiModel} from "../../../../models/dashboard.model";
-import {BarchartComponent} from "../../commons/barchart/barchart.component";
-import {KpiComponent} from "../../commons/kpi/kpi.component";
-import {DashboardService, dashResponse} from "../../../../services/dashboard.service";
+import { AfterViewInit, Component, EventEmitter, Input, OnInit, Output } from '@angular/core';
+import { DashBoardFilters, graphModel, kpiModel } from "../../../../models/dashboard.model";
+import { BarchartComponent } from "../../commons/barchart/barchart.component";
+import { KpiComponent } from "../../commons/kpi/kpi.component";
+import { DashboardService, dashResponse } from "../../../../services/dashboard.service";
 
 @Component({
   selector: 'app-entries-dashboard',
@@ -14,82 +14,109 @@ import {DashboardService, dashResponse} from "../../../../services/dashboard.ser
   templateUrl: './entries-dashboard.component.html',
   styleUrl: './entries-dashboard.component.css'
 })
-export class EntriesDashboardComponent implements AfterViewInit {
+export class EntriesDashboardComponent implements OnInit, AfterViewInit {
   @Input() filters: DashBoardFilters = {} as DashBoardFilters;
   @Output() notifyParent: EventEmitter<string> = new EventEmitter<string>();
   title: string = "";
 
-  //vars
-  kpi1: kpiModel = {} as kpiModel
-  kpi2: kpiModel = {} as kpiModel
-  kpi3: kpiModel = {} as kpiModel
-
-  graph1: graphModel = {} as graphModel
-
-  ngAfterViewInit(): void {
-    this.getData()
-  }
+  kpi1: kpiModel;
+  kpi2: kpiModel;
+  kpi3: kpiModel;
+  graph1: graphModel;
 
   constructor(private dashBoardService: DashboardService) {
-    this.kpi1 = {title: " en el periodo", desc: "", value: "0", icon: "", color: ""}
-    this.kpi2 = {title: "Promedio diario", desc: "", value: "0", icon: "bi bi-calculator", color: "bg-warning"}
-    this.kpi3 = {title: "Periodo más concurrido", desc: "", value: "0", icon: "bi bi-calendar-event", color: "bg-info"}
+    // Inicialización base de KPIs
+    this.kpi1 = {
+      title: "Totales en el periodo",
+      desc: "",
+      value: "0",
+      icon: "bi bi-arrow-up-circle",
+      color: "bg-success"
+    };
 
-    this.graph1 = {title: "Ingresos/egresos", subtitle: "Totales por perdiodo seleccionado", data: [], options: null}
+    this.kpi2 = {
+      title: "Promedio diario",
+      desc: "",
+      value: "0",
+      icon: "bi bi-calculator",
+      color: "bg-warning"
+    };
+
+    this.kpi3 = {
+      title: "Periodo más concurrido",
+      desc: "",
+      value: "0",
+      icon: "bi bi-calendar-event",
+      color: "bg-info"
+    };
+
+    this.graph1 = {
+      title: "Ingresos/egresos",
+      subtitle: "Totales por periodo seleccionado",
+      data: [],
+      options: null
+    };
+  }
+
+  ngOnInit() {
+    // Actualizamos los valores iniciales basados en el tipo de acción
+    this.updateKpiDisplays();
+  }
+
+  ngAfterViewInit(): void {
+    this.getData();
+  }
+
+  private updateKpiDisplays() {
+    const isEntry = this.filters?.action === "ENTRY";
+    const action = isEntry ? "Ingresos" : "Egresos";
+    
+    this.title = action;
+    this.graph1.title = `${action} totales`;
+    this.kpi1.title = `${action} totales`;
+    this.kpi1.icon = isEntry ? "bi bi-arrow-up-circle" : "bi bi-arrow-down-circle";
+    this.kpi1.color = isEntry ? "bg-success" : "bg-danger";
   }
 
   getData() {
-    let action = this.filters.action == "ENTRY" ? "Ingresos" : "Egresos"
-    this.title = action;
-    this.graph1.title = action + " totales"
-    this.kpi1.title = action + " totales"
-    this.kpi1.icon = this.filters.action == "ENTRY" ? "bi bi-arrow-up-circle" : "bi bi-arrow-down-circle"
-    this.kpi1.color = this.filters.action == "ENTRY" ? "bg-success" : "bg-danger"
+    this.updateKpiDisplays();
 
-    this.columnChartOptions.hAxis.showTextEvery = this.filters.group == "WEEK" ? 2 : 3
-    this.columnChartOptions.hAxis.showTextEvery = this.filters.group == "MONTH" || this.filters.group == "YEAR" ? 1 : 3
+    this.columnChartOptions.hAxis.showTextEvery = this.filters.group === "WEEK" ? 2 : 
+      (this.filters.group === "MONTH" || this.filters.group === "YEAR" ? 1 : 3);
 
-    //obtener filtro
     this.dashBoardService.getPeriod(this.filters).subscribe(data => {
-      this.graph1.data = mapColumnData(data)
+      this.graph1.data = mapColumnData(data);
       this.graph1.options = {
         ...this.columnChartOptions,
-        colors: [this.filters.action == 'ENTRY' ? '#8DDFDF' : '#FFA8B4']
-      }
-      let totalValue1 = 0;
-      data.forEach(item => {
-        totalValue1 += Number(item.value);
-      });
-      this.kpi2.value = (totalValue1 / data.length).toFixed(2)
+        colors: [this.filters.action === 'ENTRY' ? '#8DDFDF' : '#FFA8B4']
+      };
+
+      const totalValue1 = data.reduce((sum, item) => sum + Number(item.value), 0);
+      this.kpi2.value = (totalValue1 / data.length).toFixed(2);
       this.kpi1.value = totalValue1.toString();
 
-      let maxValueResponse = data[0];
-      for (let i = 1; i < data.length; i++) {
-        if (parseFloat(data[i].value) > parseFloat(maxValueResponse.value)) {
-          maxValueResponse = data[i];
-        }
+      const maxValueResponse = data.reduce((max, item) => 
+        parseFloat(item.value) > parseFloat(max.value) ? item : max, data[0]);
+      
+      if (maxValueResponse) {
+        this.kpi3.value = maxValueResponse.key;
       }
-      this.kpi3.value = maxValueResponse.key
-
-
-    })
+    });
   }
-
 
   columnChartOptions = {
     backgroundColor: 'transparent',
-    legend: {position: 'none'},
-    chartArea: {width: '100%', height: '90%'},
+    legend: { position: 'none' },
+    chartArea: { width: '100%', height: '90%' },
     vAxis: {
       textStyle: {
         color: '#6c757d',
-        fontSize: 12  // Tamaño de fuente más pequeño
+        fontSize: 12
       },
-      // Formato personalizado para mostrar los valores en miles
       format: '#',
     },
     hAxis: {
-      textStyle: {color: '#6c757d'},
+      textStyle: { color: '#6c757d' },
       showTextEvery: 2
     },
     animation: {
@@ -99,20 +126,17 @@ export class EntriesDashboardComponent implements AfterViewInit {
     },
     height: 400,
     width: 650,
-    bar: {groupWidth: '70%'}
+    bar: { groupWidth: '70%' }
   };
 
   back() {
     this.notifyParent.emit("ALL");
   }
-
-
 }
 
-function mapColumnData(array: dashResponse[]): any {
+function mapColumnData(array: dashResponse[]): [string, number][] {
   return array.map(data => [
     data.key,
-    data.value || 0
+    Number(data.value) || 0
   ]);
-
 }

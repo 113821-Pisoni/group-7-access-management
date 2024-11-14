@@ -1,11 +1,10 @@
-import {AfterViewInit, Component, EventEmitter, Input, OnInit, Output, output} from '@angular/core';
-import {DashBoardFilters, graphModel, kpiModel} from "../../../../models/dashboard.model";
-import {KpiComponent} from "../../commons/kpi/kpi.component";
-import {DashboardService, dashResponse} from "../../../../services/dashboard.service";
-import {BarchartComponent} from "../../commons/barchart/barchart.component";
-import {PiechartComponent} from "../../commons/piechart/piechart.component";
-import {VisitorTypeAccessDictionary} from "../../../../models/authorize.model";
-import {ChartType} from "angular-google-charts";
+import { Component, EventEmitter, Input, OnInit, Output } from '@angular/core';
+import { DashBoardFilters, graphModel, kpiModel } from "../../../../models/dashboard.model";
+import { KpiComponent } from "../../commons/kpi/kpi.component";
+import { DashboardService, dashResponse } from "../../../../services/dashboard.service";
+import { BarchartComponent } from "../../commons/barchart/barchart.component";
+import { PiechartComponent } from "../../commons/piechart/piechart.component";
+import { VisitorTypeAccessDictionary } from "../../../../models/authorize.model";
 
 @Component({
   selector: 'app-main-dashboard',
@@ -18,43 +17,81 @@ import {ChartType} from "angular-google-charts";
   templateUrl: './main-dashboard.component.html',
   styleUrl: './main-dashboard.component.css'
 })
-
-export class MainDashboardComponent implements AfterViewInit{
-  //inputs
+export class MainDashboardComponent implements OnInit {
   @Input() filters: DashBoardFilters = {} as DashBoardFilters;
   @Output() notifyParent: EventEmitter<string> = new EventEmitter<string>();
   typeDictionary = VisitorTypeAccessDictionary;
 
-  //vars
-  kpi1: kpiModel = {} as kpiModel
-  kpi2: kpiModel = {} as kpiModel
-  kpi3: kpiModel = {} as kpiModel
-  kpi4: kpiModel = {} as kpiModel
+  kpi1: kpiModel = {
+    title: "Ingresos: Actual/Anterior",
+    desc: "Suma total en el periodo actual vs. anterior",
+    value: "0",
+    icon: "bi bi-arrow-up-circle",
+    color: "bg-success"
+  };
 
-  graph1: graphModel = {} as graphModel
-  graph2: graphModel = {} as graphModel
-  graph3: graphModel = {} as graphModel
-  graph4: graphModel = {} as graphModel
+  kpi2: kpiModel = {
+    title: "Tendencia de",
+    desc: "",
+    value: "0%",
+    icon: "bi bi-graph-up",
+    color: "bg-info"
+  };
 
+  kpi3: kpiModel = {
+    title: "Ingreso/Egreso Más Frecuente",
+    desc: "Tipo más frecuente en el periodo",
+    value: "0",
+    icon: "bi bi-person-circle",
+    color: "bg-warning"
+  };
 
-  //redirect
+  kpi4: kpiModel = {
+    title: "Total de Ingresos/Egresos Inconsistentes",
+    desc: "Cantidad total de inconsistencias en el periodo",
+    value: "0",
+    icon: "bi-exclamation-circle",
+    color: "bg-danger"
+  };
+
+  graph1: graphModel = {
+    title: "Totales de Ingresos/Egresos por Periodo",
+    subtitle: "",
+    data: [],
+    options: null
+  };
+
+  graph2: graphModel = {
+    title: "Empleados con Egreso Tardío",
+    subtitle: "",
+    data: [],
+    options: null
+  };
+
+  graph3: graphModel = {
+    title: "Tipos de Ingresos/Egresos",
+    subtitle: "",
+    data: [],
+    options: null
+  };
+
+  graph4: graphModel = {
+    title: "Inconsistencias en Ingresos/Egresos",
+    subtitle: "",
+    data: [],
+    options: null
+  };
+
+  constructor(private dashBoardService: DashboardService) {}
+
+  ngOnInit(): void {
+    this.getData();
+  }
+
   sendNotification(mode: string) {
     this.notifyParent.emit(mode);
   }
-  //init
-  constructor(private dashBoardService: DashboardService) {
-    this.kpi1 = {title: "Ingresos: Actual/Anterior", desc: "Suma total en el periodo actual vs. anterior", value: "0", icon: "", color: "bg-success"}
-    this.kpi2 = {title: "Tendencia de", desc: "", value: "0%", icon: "bi bi-graph-up", color: "bg-info"}
-    this.kpi3 = {title: "Ingreso/Egreso Más Frecuente", desc: "Tipo más frecuente en el periodo", value: "0", icon: "bi bi-person-circle", color: "bg-warning"}
-    this.kpi4 = {title: "Total de Ingresos/Egresos Inconsistentes", desc: "Cantidad total de inconsistencias en el periodo", value: "0", icon: "bi-exclamation-circle", color: "bg-danger"}
 
-    this.graph1 = {title: "Totales de Ingresos/Egresos por Periodo", subtitle: "", data: [], options: null}
-    this.graph2 = {title: "Empleados con Egreso Tardío", subtitle: "", data: [], options: null}
-    this.graph3 = {title: "Tipos de Ingresos/Egresos", subtitle: "", data: [], options: null}
-    this.graph4 = {title: "Inconsistencias en Ingresos/Egresos", subtitle: "", data: [], options: null}
-  }
-
-  //getData
   getData() {
     console.log(this.filters)
     let action = this.filters.action == "ENTRY" ? "Ingresos" : "Egresos"
@@ -62,16 +99,16 @@ export class MainDashboardComponent implements AfterViewInit{
     this.kpi1.color = this.filters.action == "ENTRY" ? "bg-success" : "bg-danger"
     this.kpi1.title = action + ": Actual/Anterior"
     this.kpi2.title = "Tendencias de " + action.toLowerCase()
-    this.kpi1.desc = ""//"Suma total de " + action.toLowerCase() + " en el periodo actual vs. anterior"
+    this.kpi1.desc = ""
     this.kpi4.title = "Total de " + action.toLowerCase() + " Inconsistentes"
-    this.kpi4.desc = ""//"Cantidad total de inconsistencias en " + action.toLowerCase() + " durante el periodo"
-    this.kpi3.desc = ""//"Tipo de " + action.toLowerCase() + " más frecuente en el periodo"
+    this.kpi4.desc = ""
+    this.kpi3.desc = ""
     this.kpi3.title = action.charAt(0).toUpperCase() + action.slice(1).toLowerCase() + " Más Frecuente"
     this.graph1.title = "Totales de " + action + " por Periodo"
     this.graph3.title = "Tipos de " + action
-    this.graph3.subtitle = ""//"Porcentaje de cada tipo de " + action.toLowerCase()
+    this.graph3.subtitle = ""
     this.graph4.title = "Inconsistencias en " + action
-    this.graph4.subtitle = ""//action + " con Inconsistencias"
+    this.graph4.subtitle = ""
 
     this.columnChartOptions.hAxis.showTextEvery = (this.filters.group == "WEEK" ? 2 : (this.filters.group == "MONTH" || this.filters.group == "YEAR" ? 1 : 3));
 
@@ -88,7 +125,6 @@ export class MainDashboardComponent implements AfterViewInit{
     this.graph2.options.width = 300;
     this.graph2.options.height = 200;
 
-    //obtener filtro
     this.dashBoardService.getPeriod(this.filters).subscribe(data => {
       this.graph1.data = mapColumnData(data)
       this.graph1.options = {...this.columnChartOptions,
@@ -112,13 +148,12 @@ export class MainDashboardComponent implements AfterViewInit{
         this.kpi2.icon = kpi2value > 0 ? "bi bi-graph-up" : "bi bi-graph-down"
       })
     })
-    //obtener tipos
+
     this.dashBoardService.getTypes(this.filters).subscribe(data => {
       if (data.length === 0) {
         return undefined;
       }
 
-      // Buscar el objeto con el valor más alto
       let maxValueResponse = data[0];
 
       if (this.filters.action == "EXIT"){
@@ -153,10 +188,7 @@ export class MainDashboardComponent implements AfterViewInit{
     this.dashBoardService.getPeriod(inconsistenciesFilter).subscribe(data => {
       this.graph2.data = mapColumnData(data)
     })
-
   }
-
-  
 
   columnChartOptions = {
     backgroundColor: 'transparent',
@@ -165,9 +197,8 @@ export class MainDashboardComponent implements AfterViewInit{
     vAxis: {
       textStyle: {
         color: '#6c757d',
-        fontSize: 12  // Tamaño de fuente más pequeño
+        fontSize: 12
       },
-      // Formato personalizado para mostrar los valores en miles
       format: '#',
     },
     hAxis: {
@@ -195,19 +226,15 @@ export class MainDashboardComponent implements AfterViewInit{
     height: '80%',
     width: 300,
     slices: {
-      0: { color: '#00BFFF' },  // MP siempre azul
-      1: { color: '#00BFFF' },  // STRIPE siempre violeta
-      2: { color: '#00BFFF' }   // EFECTIVO siempre verde
+      0: { color: '#00BFFF' },
+      1: { color: '#00BFFF' },
+      2: { color: '#00BFFF' }
     },
     pieSliceTextStyle: {
       color: 'black',
       fontSize: 14
     }
   };
-
-  ngAfterViewInit(): void {
-    this.getData()
-  }
 }
 
 function createPreviousFilter(filters: DashBoardFilters): DashBoardFilters {
@@ -216,7 +243,6 @@ function createPreviousFilter(filters: DashBoardFilters): DashBoardFilters {
 
   const diffInDays = (dateTo.getTime() - dateFrom.getTime()) / (1000 * 60 * 60 * 24);
 
-  // Crear nuevas fechas desde la diferencia calculada
   const newDateTo = new Date(dateFrom);
   const newDateFrom = new Date(dateFrom);
   newDateFrom.setDate(newDateFrom.getDate() - diffInDays);
@@ -257,4 +283,3 @@ function mapColumnDataT(array:dashResponse[], dictionary:any ) : any{
     data.value || 0
   ]);
 }
-
