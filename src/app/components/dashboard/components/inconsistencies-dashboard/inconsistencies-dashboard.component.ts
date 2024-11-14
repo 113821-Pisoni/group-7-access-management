@@ -1,4 +1,4 @@
-import { Component, EventEmitter, Input, OnInit, Output } from '@angular/core';
+import { AfterViewInit, Component, EventEmitter, Input, OnInit, Output } from '@angular/core';
 import { DashBoardFilters, graphModel, kpiModel } from "../../../../models/dashboard.model";
 import { KpiComponent } from "../../commons/kpi/kpi.component";
 import { PiechartComponent } from "../../commons/piechart/piechart.component";
@@ -19,116 +19,93 @@ import { BarchartComponent } from "../../commons/barchart/barchart.component";
 export class InconsistenciesDashboardComponent implements OnInit {
   @Input() filters: DashBoardFilters = {} as DashBoardFilters;
   @Output() notifyParent: EventEmitter<string> = new EventEmitter<string>();
-  title: string = "inconsistencias";
+  title: string = "";
 
-  kpi1: kpiModel = {
-    title: "Inconsistencias en el periodo vs el anterior",
-    desc: "Total de inconsistencias en el periodo vs el periodo anterior",
-    value: "0",
-    icon: "bi-exclamation-circle",
-    color: "bg-danger"
-  };
+  //vars
+  kpi1: kpiModel = {} as kpiModel
+  kpi2: kpiModel = {} as kpiModel
+  kpi3: kpiModel = {} as kpiModel
 
-  kpi2: kpiModel = {
-    title: "Tendencias de inconsistencias",
-    desc: "",
-    value: "0",
-    icon: "",
-    color: "bg-success"
-  };
+  graph1: graphModel = {} as graphModel
 
-  kpi3: kpiModel = {
-    title: "Periodo con mayor cantidad",
-    desc: "",
-    value: "0",
-    icon: "bi bi-calendar-event",
-    color: "bg-info"
-  };
-
-  graph1: graphModel = {
-    title: "Totales",
-    subtitle: "",
-    data: [],
-    options: null
-  };
-
-  constructor(private dashBoardService: DashboardService) {
-    this.initializeGraphOptions();
-  }
-
-  ngOnInit(): void {
-    this.updateDisplayData();
-    this.getData();
-  }
-
-  private initializeGraphOptions() {
-    this.graph1.options = {
-      ...this.columnChartOptions
-    };
-  }
-
-  private updateDisplayData() {
-    const action = this.filters.action === "ENTRY" ? "Ingresos" : "Egresos";
-    this.title = `inconsistencias de ${action.toLowerCase()}`;
-    this.kpi2.color = this.filters.action === "ENTRY" ? "bg-success" : "bg-danger";
-    this.kpi2.desc = `Total de ${action.toLowerCase()} en el periodo vs el periodo anterior`;
-    this.graph1.title = `${action} totales`;
-  }
 
   back() {
     this.notifyParent.emit("ALL");
   }
 
+  constructor(private dashBoardService: DashboardService) { }
+
   getData() {
-    const showTextEvery = this.filters.group === "WEEK" ? 2 : 
-                         (this.filters.group === "MONTH" || this.filters.group === "YEAR" ? 1 : 3);
+    let action = this.filters.action == "ENTRY" ? "Ingresos" : "Egresos"
+    this.title = " inconsistencias de " + action.toLowerCase()
 
-    this.columnChartOptions.hAxis.showTextEvery = showTextEvery;
+    this.kpi1.title = "Inconsistencias en el periodo vs el anterior"
+    this.kpi1.icon = "bi-exclamation-circle"
+    this.kpi1.color = "bg-danger"
+    this.kpi1.desc = "Total de inconsistencias en el periodo vs el periodo anterior"
 
-    const inconsistenciesFilter = {
-      ...this.filters,
-      dataType: "INCONSISTENCIES"
-    };
+    this.kpi2.title = "Tendencias de inconsistencias"
+    this.kpi2.color = this.filters.action == "ENTRY" ? "bg-success" : "bg-danger"
+    this.kpi2.desc = "Total de " + action.toLowerCase() + " en el periodo vs el periodo anterior"
 
+    this.kpi3.title = "Periodo con mayor cantidad"
+    this.kpi3.color = "bg-info"
+    this.kpi3.icon = "bi bi-calendar-event"
+
+    this.graph1.title = action + " totales"
+
+
+    this.columnChartOptions.hAxis.showTextEvery = this.filters.group == "WEEK" ? 2 : 3
+    this.columnChartOptions.hAxis.showTextEvery = this.filters.group == "MONTH" || this.filters.group == "YEAR" ? 1 : 3
+
+    //obtener filtro
+    let inconsistenciesFilter = { ...this.filters }
+    inconsistenciesFilter.dataType = "INCONSISTENCIES"
     this.dashBoardService.getPeriod(inconsistenciesFilter).subscribe(data => {
-      this.graph1.data = mapColumnData(data);
+      this.graph1.data = mapColumnData(data)
       this.graph1.options = {
-        ...this.columnChartOptions
-      };
-
-      const totalValue1 = data.reduce((sum, item) => sum + Number(item.value), 0);
-
-      const previousFilter = createPreviousFilter(inconsistenciesFilter);
-      this.dashBoardService.getPeriod(previousFilter).subscribe(prevData => {
-        const totalValue = prevData.reduce((sum, item) => sum + Number(item.value), 0);
-        
-        this.kpi1.value = `${totalValue1} / ${totalValue}`;
-        
-        const kpi2value = this.calculateTrendPercentage(totalValue1, totalValue);
-        this.kpi2.value = `${kpi2value.toFixed(2)}%`;
-        this.kpi2.icon = kpi2value > 0 ? "bi bi-graph-up" : "bi bi-graph-down";
-      });
-
-      const maxValueResponse = data.reduce((max, current) => 
-        parseFloat(current.value) > parseFloat(max.value) ? current : max, data[0]);
-      
-      if (maxValueResponse) {
-        this.kpi3.value = maxValueResponse.key;
+        ...this.columnChartOptions,
       }
-    });
+      let totalValue1 = 0;
+      data.forEach(item => {
+        totalValue1 += Number(item.value);
+      });
+      let previousFilter = createPreviousFilter(inconsistenciesFilter)
+      this.dashBoardService.getPeriod(previousFilter).subscribe(data => {
+        let totalValue = 0;
+        data.forEach(item => {
+          totalValue += Number(item.value);
+        });
+        this.kpi1.value = totalValue1.toString() + " / " + totalValue.toString();
+        let kpi2value = ((totalValue - totalValue1) / totalValue1) * 100 == Infinity || Number.isNaN((((totalValue - totalValue1) / totalValue1) * 100)) ? 0 : ((totalValue - totalValue1) / totalValue1) * 100;
+        this.kpi2.value = kpi2value.toFixed(2) + "%";
+        this.kpi2.icon = kpi2value > 0 ? "bi bi-graph-up" : "bi bi-graph-down"
+      })
+
+      let maxValueResponse = data[0];
+      for (let i = 1; i < data.length; i++) {
+        if (parseFloat(data[i].value) > parseFloat(maxValueResponse.value)) {
+          maxValueResponse = data[i];
+        }
+      }
+
+      // Convertir maxValueResponse.key a formato dd/MM/yyyy
+      const date = new Date(maxValueResponse.key);
+      const formattedDate = `${date.getDate().toString().padStart(2, '0')}/${(date.getMonth() + 1).toString().padStart(2, '0')}/${date.getFullYear()}`;
+
+      this.kpi3.value = formattedDate;
+
+    })
+
+
+
   }
 
-  private calculateTrendPercentage(current: number, previous: number): number {
-    const difference = previous - current;
-    return difference / current * 100 === Infinity || 
-           isNaN(difference / current * 100) ? 0 : 
-           difference / current * 100;
-  }
 
   columnChartOptions = {
     backgroundColor: 'transparent',
-    legend: {position: 'none'},
-    chartArea: {width: '95%', height: '80%'},
+    legend: { position: 'none' },
+    chartArea: { width: '95%', height: '80%' },
     vAxis: {
       textStyle: {
         color: '#6c757d',
@@ -138,7 +115,7 @@ export class InconsistenciesDashboardComponent implements OnInit {
     },
     colors: ['#FFE08A'],
     hAxis: {
-      textStyle: {color: '#6c757d'},
+      textStyle: { color: '#6c757d' },
       showTextEvery: 2
     },
     animation: {
@@ -148,21 +125,30 @@ export class InconsistenciesDashboardComponent implements OnInit {
     },
     height: 500,
     width: '650',
-    bar: {groupWidth: '70%'}
+    bar: { groupWidth: '70%' }
   };
+
+  ngOnInit(): void {
+    this.getData()
+  }
+
+
 }
 
-function mapColumnData(array: dashResponse[]): [string, number][] {
+
+function mapColumnData(array: dashResponse[]): any {
   return array.map(data => [
     data.key,
-    Number(data.value) || 0
+    data.value || 0
   ]);
 }
 
 function createPreviousFilter(filters: DashBoardFilters): DashBoardFilters {
   const dateFrom = new Date(filters.dateFrom);
   const dateTo = new Date(filters.dateTo);
+
   const diffInDays = (dateTo.getTime() - dateFrom.getTime()) / (1000 * 60 * 60 * 24);
+
   const newDateTo = dateFrom;
   const newDateFrom = new Date(dateFrom);
   newDateFrom.setDate(newDateFrom.getDate() - diffInDays);
@@ -175,4 +161,18 @@ function createPreviousFilter(filters: DashBoardFilters): DashBoardFilters {
     type: filters.type,
     dataType: "ALL"
   };
+}
+function formatFormDate(inputDate: string): string {
+  // Verificar que la entrada sea una fecha válida en el formato yyyy-MM-dd
+  const dateParts = inputDate.split('-');
+  if (dateParts.length !== 3) {
+    throw new Error('Fecha no válida. Debe estar en formato yyyy-MM-dd');
+  }
+
+  const year = dateParts[0];
+  const month = dateParts[1];
+  const day = dateParts[2];
+
+  // Devolver la fecha en el formato dd-MM-yyyy
+  return `${day}-${month}-${year}`;
 }

@@ -10,7 +10,7 @@
         <span class="text-secondary">Hasta:</span>
         <input type="datetime-local" 
                [(ngModel)]="filters.dateTo" 
-               [max]="getMaxDate()"
+               [max]="getCurrentDateTime()"
                class="form-control form-control-sm"
                (change)="filterData()">
       </div>

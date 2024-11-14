@@ -1,4 +1,4 @@
-import {AfterViewInit, Component, EventEmitter, Input, Output} from '@angular/core';
+import {AfterViewInit, Component, EventEmitter, Input, OnInit, Output} from '@angular/core';
 import {DashBoardFilters, graphModel, kpiModel} from "../../../../models/dashboard.model";
 import {DashboardService, dashResponse} from "../../../../services/dashboard.service";
 import {BarchartComponent} from "../../commons/barchart/barchart.component";
@@ -18,7 +18,7 @@ import {ChartType} from "angular-google-charts";
   templateUrl: './types-dashboard.component.html',
   styleUrl: './types-dashboard.component.css'
 })
-export class TypesDashboardComponent implements AfterViewInit {
+export class TypesDashboardComponent implements OnInit {
   @Input() filters: DashBoardFilters = {} as DashBoardFilters;
   @Output() notifyParent: EventEmitter<string> = new EventEmitter<string>();
   title: string = ""
@@ -31,7 +31,7 @@ export class TypesDashboardComponent implements AfterViewInit {
 
   graph1: graphModel = {} as graphModel
 
-  ngAfterViewInit(): void {
+  ngOnInit(): void {
     this.getData()
   }
 
@@ -84,54 +84,27 @@ export class TypesDashboardComponent implements AfterViewInit {
     backgroundColor: 'transparent',
     legend: {
       position: 'right-center',
-      textStyle: { color: '#6c757d', fontSize: 25 }
+      textStyle: { color: '#6c757d', fontSize: 17 }
     },
     chartArea: { width: '100%', height: '100%' },
     pieHole: 0,
-    height: '80%',
-    width: 300,
-    colors: [
-      '#FFECB3',  // Amarillo claro
-      '#B3C8FE',  // Azul claro
-      '#FFCDD7',  // Rosa claro
-      '#C8EBEB',  // Verde menta claro
-      '#D9C5FF',  // Morado claro
-      '#FFDFBF',  // Naranja claro
-      '#BCDFF7'   // Azul celeste claro
-    ],
+    height: 400,
+    slices: {
+      0: { color: '#fff2cc' },
+      1: { color: '#cadefc' },  
+      2: { color: '#ffccd7' } ,  
+      3: { color: '#99bfbf' },   
+      4: { color: '#ddccff' }   
+    },
     pieSliceTextStyle: {
       color: 'black',
-      fontSize: 20
+      fontSize: 18
     }
-};
-
-// Array de colores para los bordes
-borderColors = [
-  '#ffc107',  // Borde Amarillo
-  '#0d6efd',  // Borde Azul
-  '#ff6384',  // Borde Rosa
-  '#4bc0c0',  // Borde Verde menta
-  '#9966ff',  // Borde Morado
-  '#ff9f40',  // Borde Naranja
-  '#36a2eb'   // Borde Azul celeste
-];
-
-onChartReady(event: any) {
-  const chart = event.chart;
-  const slices = chart.getVisual().data.length;
-  
-  for(let i = 0; i < slices; i++) {
-    chart.setOption('slices.' + i + '.stroke', this.borderColors[i]);
-    chart.setOption('slices.' + i + '.strokeWidth', 2);
-  }
-  
-  chart.draw();
-}
-
+  };
+ 
   back() {
     this.notifyParent.emit("ALL");
   }
-
 
 }
 

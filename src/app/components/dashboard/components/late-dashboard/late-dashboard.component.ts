@@ -1,4 +1,4 @@
-import {AfterViewInit, Component, EventEmitter, Input, Output} from '@angular/core';
+import {AfterViewInit, Component, EventEmitter, Input, OnInit, Output} from '@angular/core';
 import {DashBoardFilters, graphModel, kpiModel} from "../../../../models/dashboard.model";
 import {KpiComponent} from "../../commons/kpi/kpi.component";
 import {PiechartComponent} from "../../commons/piechart/piechart.component";
@@ -16,7 +16,7 @@ import {DashboardService, dashResponse} from "../../../../services/dashboard.ser
   templateUrl: './late-dashboard.component.html',
   styleUrl: './late-dashboard.component.css'
 })
-export class LateDashboardComponent implements AfterViewInit {
+export class LateDashboardComponent implements OnInit {
   @Input() filters: DashBoardFilters = {} as DashBoardFilters;
   @Output() notifyParent: EventEmitter<string> = new EventEmitter<string>();
   title: string = "";
@@ -89,7 +89,13 @@ export class LateDashboardComponent implements AfterViewInit {
           maxValueResponse = data[i];
         }
       }
-      this.kpi3.value = maxValueResponse.key
+      
+      // Convertir maxValueResponse.key a formato dd/MM/yyyy
+      const date = new Date(maxValueResponse.key);
+      const formattedDate = `${date.getDate().toString().padStart(2, '0')}/${(date.getMonth() + 1).toString().padStart(2, '0')}/${date.getFullYear()}`;
+      
+      this.kpi3.value = formattedDate;
+      
     })
 
   }
@@ -121,7 +127,7 @@ export class LateDashboardComponent implements AfterViewInit {
     bar: {groupWidth: '70%'}
   };
 
-  ngAfterViewInit(): void {
+  ngOnInit(): void {
     this.getData()
   }
 
