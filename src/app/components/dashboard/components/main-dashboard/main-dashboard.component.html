@@ -1,52 +1,48 @@
+<!-- KPIs Row -->
 <div class="row mb-3">
-  <div class="col-3 d-flex align-content-center flex-wrap justify-content-center">
-    <div class="hover-scale" style="height: 120px;">
-      <app-kpi [kpi]="kpi1" (click)="sendNotification('ENTRIES')"></app-kpi>
+  @for (kpi of [
+    { model: kpi1, notification: 'ENTRIES' },
+    { model: kpi2, notification: 'TYPES' },
+    { model: kpi3, notification: 'ENTRIES' },
+    { model: kpi4, notification: 'INCONSISTENCIES' }
+  ]; track $index) {
+    <div class="col-3 d-flex align-content-center flex-wrap justify-content-center">
+      <div class="hover-scale" style="height: 120px;">
+        <app-kpi [kpi]="kpi.model" (click)="sendNotification(kpi.notification)"></app-kpi>
+      </div>
     </div>
-  </div>
-  <div class="col-3 d-flex align-content-center flex-wrap justify-content-center">
-    <div class="hover-scale" style="height: 120px;">
-      <app-kpi [kpi]="kpi2" (click)="sendNotification('TYPES')"></app-kpi>
-    </div>
-  </div>
-  <div class="col-3 d-flex align-content-center flex-wrap justify-content-center">
-    <div class="hover-scale" style="height: 120px;">
-      <app-kpi [kpi]="kpi3" (click)="sendNotification('ENTRIES')"></app-kpi>
-    </div>
-  </div>
-  <div class="col-3 d-flex align-content-center flex-wrap justify-content-center">
-    <div class="hover-scale" style="height: 120px;">
-      <app-kpi [kpi]="kpi4" (click)="sendNotification('INCONSISTENCIES')"></app-kpi>
-    </div>
-  </div>
+  }
 </div>
 
+<!-- Charts Rows -->
 <div class="row mb-3">
-  <!-- Gráfico de barras a la izquierda -->
   <div class="col-4">
     <div class="hover-scale" style="height: 300px;"> 
       <app-barchart [graphModel]="graph1" (click)="sendNotification('ENTRIES')"></app-barchart>
     </div>
   </div>
 
-  <!-- Gráficos a la derecha -->
   <div class="col-8">
     <div class="row">
-      <div class="col-6">
-        <div class="hover-scale" style="height: 300px;"> 
-          <app-piechart [graphModel]="graph3" (click)="sendNotification('TYPES')"></app-piechart>
+      @for (chart of [
+        { model: graph3, type: 'pie', notification: 'TYPES' },
+        { model: graph2, type: 'bar', notification: 'LATE' }
+      ]; track $index) {
+        <div class="col-6">
+          <div class="hover-scale" style="height: 300px;"> 
+            @if (chart.type === 'pie') {
+              <app-piechart [graphModel]="chart.model" (click)="sendNotification(chart.notification)"></app-piechart>
+            } @else {
+              <app-barchart [graphModel]="chart.model" (click)="sendNotification(chart.notification)"></app-barchart>
+            }
+          </div>
         </div>
-      </div>
-      <div class="col-6">
-        <div class="hover-scale" style="height: 300px;"> 
-          <app-barchart [graphModel]="graph2" (click)="sendNotification('LATE')"></app-barchart>
-        </div>
-      </div>
+      }
     </div>
   </div>
 </div>
 
-<!-- Gráfico inferior -->
+<!-- Bottom Chart -->
 <div class="row">
   <div class="col-12">
     <div class="hover-scale" style="height: 200px;"> 

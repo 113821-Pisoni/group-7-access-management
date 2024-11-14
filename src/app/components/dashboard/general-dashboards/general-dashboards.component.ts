@@ -1,34 +1,25 @@
-/**
- * @description Componente principal para la visualización de dashboards con implementación de lazy loading
- * @implements OnInit, AfterViewInit
- */
-import {AfterViewInit, Component, inject, OnInit, TemplateRef, ViewChild} from '@angular/core';
-import {AccessHourlyDashboardComponent} from '../../accesses/access-hourly-dashboard/access-hourly-dashboard.component';
-import {AccessWeeklyDashboardComponent} from '../../accesses/access-weekly-dashboard/access-weekly-dashboard.component';
-import {AccessPieDashboardComponent} from '../../accesses/access-pie-dashboard/access-pie-dashboard.component';
-import {FormsModule, ReactiveFormsModule} from "@angular/forms";
-import {MainContainerComponent} from "ngx-dabd-grupo01";
-import {AccessService} from "../../../services/access.service";
-import {NgbModal, NgbPopover} from '@ng-bootstrap/ng-bootstrap';
-import {GoogleChartsModule} from "angular-google-charts";
-import {KpiComponent} from "../commons/kpi/kpi.component";
-import {DashBoardFilters, DashboardStatus} from "../../../models/dashboard.model";
-import {MainDashboardComponent} from "../components/main-dashboard/main-dashboard.component";
-import {EntriesDashboardComponent} from "../components/entries-dashboard/entries-dashboard.component";
-import {LateDashboardComponent} from "../components/late-dashboard/late-dashboard.component";
-import {TypesDashboardComponent} from "../components/types-dashboard/types-dashboard.component";
-import {InconsistenciesDashboardComponent} from "../components/inconsistencies-dashboard/inconsistencies-dashboard.component";
-import {BarchartComponent} from "../commons/barchart/barchart.component";
-import {NgClass} from "@angular/common";
+import { AfterViewInit, Component, inject, OnInit, TemplateRef, ViewChild } from '@angular/core';
+import { AccessHourlyDashboardComponent } from '../../accesses/access-hourly-dashboard/access-hourly-dashboard.component';
+import { AccessWeeklyDashboardComponent } from '../../accesses/access-weekly-dashboard/access-weekly-dashboard.component';
+import { AccessPieDashboardComponent } from '../../accesses/access-pie-dashboard/access-pie-dashboard.component';
+import { FormsModule, ReactiveFormsModule } from "@angular/forms";
+import { MainContainerComponent } from "ngx-dabd-grupo01";
+import { AccessService } from "../../../services/access.service";
+import { NgbModal, NgbPopover } from '@ng-bootstrap/ng-bootstrap';
+import { GoogleChartsModule } from "angular-google-charts";
+import { KpiComponent } from "../commons/kpi/kpi.component";
+import { DashBoardFilters, DashboardStatus } from "../../../models/dashboard.model";
+import { MainDashboardComponent } from "../components/main-dashboard/main-dashboard.component";
+import { EntriesDashboardComponent } from "../components/entries-dashboard/entries-dashboard.component";
+import { LateDashboardComponent } from "../components/late-dashboard/late-dashboard.component";
+import { TypesDashboardComponent } from "../components/types-dashboard/types-dashboard.component";
+import { InconsistenciesDashboardComponent } from "../components/inconsistencies-dashboard/inconsistencies-dashboard.component";
+import { BarchartComponent } from "../commons/barchart/barchart.component";
+import { NgClass } from "@angular/common";
 
 @Component({
   selector: 'app-general-dashboards',
   standalone: true,
-  /**
-   * @imports Lista de componentes y módulos necesarios
-   * Los componentes de dashboard se importan acá pero se cargarán de manera perezosa
-   * a través de la directiva @defer en el template
-   */
   imports: [
     AccessHourlyDashboardComponent, 
     AccessWeeklyDashboardComponent, 
@@ -44,45 +35,34 @@ import {NgClass} from "@angular/common";
     TypesDashboardComponent, 
     InconsistenciesDashboardComponent, 
     NgClass, 
-    NgbPopover
+    NgbPopover,
+    BarchartComponent
   ],
   templateUrl: './general-dashboards.component.html',
   styleUrl: './general-dashboards.component.css'
 })
-export class GeneralDashboardsComponent implements OnInit, AfterViewInit{
-  /** Objeto de filtros para los dashboards */
-  filters:DashBoardFilters = {} as DashBoardFilters
+export class GeneralDashboardsComponent implements OnInit, AfterViewInit {
+  // Objeto para almacenar los filtros activos del dashboard
+  filters: DashBoardFilters = {} as DashBoardFilters;
 
-  /** Estado actual del dashboard que determina qué componente se carga */
+  // Controla qué vista del dashboard se muestra actualmente
   status: DashboardStatus = DashboardStatus.All;
 
-  /** Servicio para manejo de modales */
+  // Servicio para gestionar ventanas modales
   modalService = inject(NgbModal);
 
-  /**
-   * Referencias a los componentes que serán cargados de manera perezosa
-   * @ViewChild se usa para obtener referencias a los componentes cuando son cargados
-   */
+  // Referencias a los componentes del dashboard para actualización de datos
   @ViewChild(MainDashboardComponent) main!: MainDashboardComponent;
   @ViewChild(EntriesDashboardComponent) entries!: EntriesDashboardComponent;
   @ViewChild(LateDashboardComponent) late!: LateDashboardComponent;
   @ViewChild(TypesDashboardComponent) types!: TypesDashboardComponent;
   @ViewChild(InconsistenciesDashboardComponent) inconsistencies!: InconsistenciesDashboardComponent;
   @ViewChild(BarchartComponent) barchartComponent!: BarchartComponent;
-  @ViewChild('infoModal') infoModal!: TemplateRef<any>
+  @ViewChild('infoModal') infoModal!: TemplateRef<any>;
 
-
-  /**
-   * @constructor
-   * @param accessService Servicio para manejo de datos de acceso
-   */
   constructor(private accessService: AccessService) {}
 
-  /**
-   * Inicializa las fechas por defecto para los filtros
-   * @returns void
-   */
-
+  // Configura las fechas iniciales para el filtro de período
   initializeDefaultDates() {
     this.filters.group = "DAY";
     this.filters.type = "";
@@ -97,18 +77,12 @@ export class GeneralDashboardsComponent implements OnInit, AfterViewInit{
     this.filters.dateFrom = now.toISOString().slice(0, 16);
   }
 
-  /**
-   * Maneja la apertura del modal de información
-   * @returns void
-   */
+  // Abre el modal con información sobre el uso del dashboard
   onInfoButtonClick() {
     this.modalService.open(this.infoModal, { size: 'lg' });
   }
 
-  /**
-   * Resetea los filtros a sus valores por defecto
-   * @returns void
-   */
+  // Restaura los filtros a sus valores predeterminados
   resetFilters() {
     this.initializeDefaultDates();
     this.filters.type = "";
@@ -117,35 +91,21 @@ export class GeneralDashboardsComponent implements OnInit, AfterViewInit{
     this.filterData()
   }
 
-  /**
-   * Actualiza los datos en todos los componentes cargados
-   * Se ejecuta cuando cambian los filtros
-   * @returns void
-   */
+  // Actualiza los datos en todos los componentes del dashboard
   filterData() {
-    // Los componentes solo se actualizarán si han sido cargados por el lazy loading
     this.main?.getData();
     this.entries?.getData();
     this.types?.getData();
     this.inconsistencies?.getData();
     this.late?.getData();
-
   }
 
-  /**
-   * Implementación del hook OnInit
-   * @returns void
-   */
+  // Se ejecuta al inicializar el componente
   ngOnInit(): void {
-    // La inicialización se realiza en ngAfterViewInit
+    // La inicialización principal se realiza en ngAfterViewInit
   }
 
-  /**
-   * Maneja el cambio de modo/vista del dashboard
-   * Esto activará la carga perezosa del componente correspondiente
-   * @param event Evento que contiene el nuevo modo
-   * @returns void
-   */
+  // Gestiona los cambios entre diferentes vistas del dashboard
   changeMode(event: any) {
     const statusKey = Object.keys(DashboardStatus).find(key => 
       DashboardStatus[key as keyof typeof DashboardStatus] === event
@@ -160,23 +120,16 @@ export class GeneralDashboardsComponent implements OnInit, AfterViewInit{
     this.types?.getData();
   }
 
-  /** Referencia al enum DashboardStatus para uso en el template */
+  // Expone el enum DashboardStatus para uso en el template
   protected readonly DashboardStatus = DashboardStatus;
 
-  /**
-   * Implementación del hook AfterViewInit
-   * Se ejecuta después de que las vistas han sido inicializadas
-   * @returns void
-   */
+  // Inicializa el componente después de que la vista está lista
   ngAfterViewInit(): void {
     this.initializeDefaultDates();
     this.filterData()
   }
 
-  /**
-   * Obtiene la fecha y hora actual formateada
-   * @returns string Fecha y hora actual en formato ISO
-   */
+  // Obtiene la fecha y hora actual en formato ISO para los inputs datetime-local
   getCurrentDateTime(): string {
     const now = new Date();
     now.setMinutes(now.getMinutes() - now.getTimezoneOffset());

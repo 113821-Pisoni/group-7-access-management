@@ -67,11 +67,11 @@ export const routes: Routes = [
     path: 'dashboard',
     component: GeneralDashboardsComponent,
   },
-  {
-    path: 'dashboard',
-    loadChildren: () => import('./components/dashboard/dashboard.routes')
-      .then(m => m.DASHBOARD_ROUTES)
-  },
+  // {
+  //   path: 'dashboard',
+  //   loadChildren: () => import('./components/dashboard/dashboard.routes')
+  //     .then(m => m.DASHBOARD_ROUTES)
+  // },
   { 
     path: 'home', 
     component: HomeComponent, /* canActivate: [authGuard] */ 
