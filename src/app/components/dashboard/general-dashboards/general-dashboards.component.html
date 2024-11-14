@@ -1,48 +1,30 @@
-<!-- Contenedor principal con título y función de información -->
 <app-main-container title="Reportes" (infoButtonClick)="onInfoButtonClick()">
-  <!-- Sección de filtros -->
   <div class="row mb-4">
     <div class="d-flex align-items-center gap-3 mb-3">
-      <!-- Filtro de fecha inicial -->
       <div class="d-flex align-items-center gap-2">
         <span class="text-secondary">Desde:</span>
-        <input type="datetime-local" 
-               [(ngModel)]="filters.dateFrom" 
-               class="form-control form-control-sm"
+        <input type="datetime-local" [(ngModel)]="filters.dateFrom" class="form-control form-control-sm"
                (change)="filterData()">
       </div>
-
-      <!-- Filtro de fecha final -->
       <div class="d-flex align-items-center gap-2">
         <span class="text-secondary">Hasta:</span>
         <input type="datetime-local" 
                [(ngModel)]="filters.dateTo" 
-               [max]="getCurrentDateTime()"
+               [max]="getMaxDate()"
                class="form-control form-control-sm"
                (change)="filterData()">
       </div>
-
-      <!-- Botón de filtros adicionales con popover -->
-      <button type="button" 
-              class="btn btn-outline-info" 
-              [ngbPopover]="popContent"
-              [autoClose]="'outside'" 
-              placement="bottom">
+      <button type="button" class="btn btn-outline-info" [ngbPopover]="popContent"
+              [autoClose]="'outside'" placement = "bottom" >
         <i class="bi bi-funnel-fill"></i>
       </button>
-      
-      <!-- Template del popover con filtros adicionales -->
       <ng-template #popContent>
-        <!-- Selector de periodo -->
         <div class="row mb-3">
           <div class="col-4 d-flex align-content-center flex-wrap">
             <span class="text-secondary">Periodo:</span>
           </div>
           <div class="col-8">
-            <select id="period-type" 
-                    class="form-select" 
-                    [(ngModel)]="filters.group" 
-                    (change)="filterData()">
+            <select id="period-type" class="form-select" [(ngModel)]="filters.group" (change)="filterData()">
               <option value="DAY">Diario</option>
               <option value="WEEK">Semanal</option>
               <option value="MONTH">Mensual</option>
@@ -50,18 +32,12 @@
             </select>
           </div>
         </div>
-
-        <!-- Selector de tipo de visitante -->
         <div class="row">
           <div class="col-4">
             <span class="text-secondary">Tipo de Visitante:</span>
           </div>
           <div class="col-8">
-            <select id="visitor-type" 
-                    class="form-select" 
-                    [(ngModel)]="filters.type" 
-                    (change)="filterData()" 
-                    [disabled]="status === DashboardStatus.Late">
+            <select id="visitor-type" class="form-select" [(ngModel)]="filters.type" (change)="filterData()" [disabled]="status == DashboardStatus.Late">
               <option value="">Todos</option>
               <option value="OWNER">Dueño</option>
               <option value="WORKER">Trabajador</option>
@@ -75,47 +51,24 @@
           </div>
         </div>
       </ng-template>
-
-      <!-- Botón para resetear filtros -->
       <div class="d-flex gap-1">
         <button class="btn btn-outline-danger" (click)="resetFilters()">
           <i class="bi bi-trash-fill"></i>
         </button>
       </div>
 
-      <!-- Grupo de botones para selección de tipo de acceso -->
       <div class="col-md-3 ms-auto">
         <div class="filter-group">
           <div class="btn-group w-100" role="group">
-            <!-- Botón de ingresos -->
-            <input type="radio" 
-                   class="btn-check" 
-                   name="paymentStatus" 
-                   id="approved"
-                   [(ngModel)]="filters.action" 
-                   value="ENTRY" 
-                   (ngModelChange)="filterData()" 
-                   [disabled]="status === DashboardStatus.Late">
-            <label class="btn" 
-                   [class.btn-outline-secondary]="status === DashboardStatus.Late"
-                   [class.btn-outline-primary]="status !== DashboardStatus.Late" 
-                   for="approved">
+            <input type="radio" class="btn-check" name="paymentStatus" id="approved"
+                   [(ngModel)]="filters.action" value="ENTRY" (ngModelChange)="filterData()" [disabled]="status == DashboardStatus.Late" >
+            <label class="btn" [ngClass]="{'btn-outline-secondary':status == DashboardStatus.Late, 'btn-outline-primary':status != DashboardStatus.Late}" for="approved">
               <i class="bi bi-arrow-down-circle me-1"></i>Ingresos
             </label>
 
-            <!-- Botón de egresos -->
-            <input type="radio" 
-                   class="btn-check" 
-                   name="paymentStatus" 
-                   id="rejected"
-                   [(ngModel)]="filters.action" 
-                   value="EXIT" 
-                   (ngModelChange)="filterData()" 
-                   [disabled]="status === DashboardStatus.Late">
-            <label class="btn" 
-                   [class.btn-outline-secondary]="status === DashboardStatus.Late"
-                   [class.btn-outline-primary]="status !== DashboardStatus.Late" 
-                   for="rejected">
+            <input type="radio" class="btn-check" name="paymentStatus" id="rejected"
+                   [(ngModel)]="filters.action" value="EXIT" (ngModelChange)="filterData()" [disabled]="status == DashboardStatus.Late">
+            <label class="btn" [ngClass]="{'btn-outline-secondary':status == DashboardStatus.Late, 'btn-outline-primary':status != DashboardStatus.Late}" for="rejected">
               <i class="bi bi-arrow-up-circle me-1"></i>Egresos
             </label>
           </div>
@@ -124,72 +77,45 @@
     </div>
   </div>
 
-  <!-- Contenedor de dashboards con control de flujo Angular 18 -->
+
+  <!-- Grilla del dashboard -->
   <div class="row position-relative min-vh-75">
-    <!-- Dashboard principal - Muestra resumen general -->
-    @if (status === DashboardStatus.All) {
-      <app-main-dashboard 
-        [filters]="filters"  
-        (notifyParent)="changeMode($event)">
-      </app-main-dashboard>
-    }
-
-    <!-- Dashboard de entradas - Detalle de accesos -->
-    @if (status === DashboardStatus.Entries) {
-      <app-entries-dashboard 
-        [filters]="filters" 
-        (notifyParent)="changeMode($event)">
-      </app-entries-dashboard>
-    }
-
-    <!-- Dashboard de tardanzas - Análisis de retrasos -->
-    @if (status === DashboardStatus.Late) {
-      <app-late-dashboard 
-        [filters]="filters" 
-        (notifyParent)="changeMode($event)">
-      </app-late-dashboard>
-    }
-
-    <!-- Dashboard de tipos - Análisis por tipo de visitante -->
-    @if (status === DashboardStatus.Types) {
-      <app-types-dashboard 
-        [filters]="filters" 
-        (notifyParent)="changeMode($event)">
-      </app-types-dashboard>
-    }
-
-    <!-- Dashboard de inconsistencias - Análisis de errores -->
-    @if (status === DashboardStatus.Inconsistencies) {
-      <app-inconsistencies-dashboard 
-        [filters]="filters" 
-        (notifyParent)="changeMode($event)">
-      </app-inconsistencies-dashboard>
-    }
+    <div [ngClass]="{ 'd-none': status !== DashboardStatus.All }">
+      <app-main-dashboard [filters]="filters" (notifyParent)="changeMode($event)"></app-main-dashboard>
+    </div>
+    <div [ngClass]="{ 'd-none': status !== DashboardStatus.Entries }">
+      <app-entries-dashboard [filters]="filters" (notifyParent)="changeMode($event)"></app-entries-dashboard>
+    </div>
+    <div [ngClass]="{ 'd-none': status !== DashboardStatus.Late }">
+      <app-late-dashboard [filters]="filters" (notifyParent)="changeMode($event)"></app-late-dashboard>
+    </div>
+    <div [ngClass]="{ 'd-none': status !== DashboardStatus.Types }">
+      <app-types-dashboard [filters]="filters" (notifyParent)="changeMode($event)"></app-types-dashboard>
+    </div>
+    <div [ngClass]="{ 'd-none': status !== DashboardStatus.Inconsistencies }">
+      <app-inconsistencies-dashboard [filters]="filters" (notifyParent)="changeMode($event)"></app-inconsistencies-dashboard>
+    </div>
   </div>
+
 </app-main-container>
 
-<!-- Modal de información -->
+
 <ng-template #infoModal let-modal>
-  <!-- Encabezado del modal -->
   <div class="modal-header fs-6 py-1">
     <h4 class="modal-title">Información de la Pantalla de Reportes</h4>
     <button type="button" class="btn-close" aria-label="Close" (click)="modal.dismiss()"></button>
   </div>
-
-  <!-- Cuerpo del modal -->
   <div class="modal-body fs-6 py-2">
     <div class="container-fluid">
-      <!-- Sección de introducción -->
+      <!-- Introducción -->
       <div class="alert alert-info mb-2 py-2">
         <h5 class="alert-heading">¿Qué es esta pantalla?</h5>
-        <p class="mb-0 small">
-          Esta pantalla permite visualizar reportes de accesos que incluyen datos de ingresos y
+        <p class="mb-0 small">Esta pantalla permite visualizar reportes de accesos que incluyen datos de ingresos y
           egresos, y distribuciones de accesos por tipo de visitante y horarios. Es una herramienta clave para analizar
-          y gestionar el flujo de visitantes de manera eficiente.
-        </p>
+          y gestionar el flujo de visitantes de manera eficiente.</p>
       </div>
 
-      <!-- Sección de datos visualizados -->
+      <!-- Descripción de los Campos Principales -->
       <div class="card mb-2">
         <div class="card-header py-1">
           <h5 class="mb-0">Datos Visualizados</h5>
@@ -211,7 +137,7 @@
         </div>
       </div>
 
-      <!-- Sección de acciones disponibles -->
+      <!-- Acciones Disponibles -->
       <div class="card mb-2">
         <div class="card-header py-1">
           <h5 class="mb-0">Acciones Disponibles</h5>
@@ -236,18 +162,15 @@
         </div>
       </div>
 
-      <!-- Sección de notas importantes -->
+      <!-- Nota -->
       <div class="alert alert-warning py-2 mb-0">
         <h5 class="alert-heading">Nota:</h5>
-        <p class="mb-0 small">
-          Asegúrate de elegir correctamente los rangos de fechas y los filtros para obtener datos precisos.
-        </p>
+        <p class="mb-0 small">Asegúrate de elegir correctamente los rangos de fechas y los filtros para obtener datos precisos.</p>
       </div>
     </div>
   </div>
-
-  <!-- Pie del modal -->
   <div class="modal-footer py-2">
     <button type="button" class="btn btn-primary" (click)="modal.close()">Entendido</button>
   </div>
 </ng-template>
+
